@@ -62,6 +62,10 @@ app.post("/urls", (req, res) => {
 });
 
 // post route that removes url resources
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id]
+  res.redirect("/urls")
+});
 
 
 // Handles redirect to long URL
