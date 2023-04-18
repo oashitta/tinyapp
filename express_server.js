@@ -61,6 +61,9 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`)
 });
 
+// post route that removes url resources
+
+
 // Handles redirect to long URL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
