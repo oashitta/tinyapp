@@ -3,11 +3,12 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+// decodes front end view to enable it work with the backend.
+app.use(express.urlencoded({ extended: true }));
 // sets up ejs view engine
 app.set("view engine", "ejs");
 
-// decodes front end view to enable it work with the backend.
-app.use(express.urlencoded({ extended: true }));
+
 
 // obkect containing urls - the database
 const urlDatabase = {
@@ -49,21 +50,27 @@ app.get("/urls/new", (req, res) => {
 // shows details of short url.
 app.get("/urls/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  const templateVars = { id: req.params.id, longURL: longURL};
+  const templateVars = { id: req.params.id, longURL};
   // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
 
+
 // shows the details of the new url created via a post request
 app.post("/urls", (req, res) => {
   const id = generateRandomString(6)
-  urlDatabase[id] = req.body
+  urlDatabase[id] = req.body.longURL
   res.redirect(`/urls/${id}`)
 });
 
 // post route that removes url resources
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id]
+  res.redirect("/urls")
+});
+
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL
   res.redirect("/urls")
 });
 
