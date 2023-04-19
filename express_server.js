@@ -1,18 +1,20 @@
-// Import express, assign it to a cariable and set variable for the port to listen tol 
+// Import express, assign it to a cariable and set variable for the port to listen to
 const express = require("express");
+// creating an express app
 const app = express();
+
 const PORT = 8080;
 
 const cookieParser = require('cookie-parser')
 
 // decodes front end view to enable it work with the backend.
 app.use(express.urlencoded({ extended: true }));
-// sets up ejs view engine
-app.set("view engine", "ejs");
 
 // activate cookie parser
 app.use(cookieParser());
 
+// sets up ejs template view engine
+app.set("view engine", "ejs");
 
 // object containing urls - the database
 const urlDatabase = {
@@ -32,7 +34,7 @@ function generateRandomString(length) {
 }
 
 app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  res.json(username);
 });
 
 // response when a get request is sent to the homepage
@@ -42,19 +44,24 @@ app.get('/', (reg, res) => {
 
 // response for /urls path
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  // is there a logged in user? retrieve the cookie
+  // const currentUser = req.cookies
   res.render("urls_index", templateVars);
 });
 
 // response for the /urls/new path to create a new url
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { username: req.cookies["username"]};
+
+  res.render("urls_new", templateVars);
 });
 
 // shows details of short url.
 app.get("/urls/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  const templateVars = { id: req.params.id, longURL};
+  const username =  req.cookies["username"];
+  const templateVars = { id: req.params.id, longURL, username} ;
   // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
@@ -62,7 +69,9 @@ app.get("/urls/:id", (req, res) => {
 // Handles redirect to long URL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  // adding cookie request so it can be rendered in the header.
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  res.redirect(longURL, templateVars);
 });
 
 // shows the details of the new url created via a post request
@@ -86,8 +95,13 @@ app.post("/urls/:id", (req, res) => {
 
 // handles login
 app.post("/login", (req,res) => {
-  const username = req.body;
+  const username = req.body.username;
+  console.log(username);
+
+  // setting the cookie in the user's browswer
   res.cookie("username", username);
+
+  // redirecting to /urls
   res.redirect("/urls");
 });
 
