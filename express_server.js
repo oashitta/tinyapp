@@ -98,6 +98,11 @@ app.get("/register", (req, res) => {
   res.render("user_registration", templateVars);
 });
 
+app.get("/login", (req, res) => {
+  const templateVars = { user: req.cookies["user_id"]};
+  res.render("user_login", templateVars );
+});
+
 // shows the details of the new url created via a post request
 app.post("/urls", (req, res) => {
   const id = generateRandomString(6);
@@ -173,14 +178,19 @@ app.post("/register", (req, res) => {
 
   // if email field is empty send back response with 400 status code
   const user = findExistingUser(email);
+  if (email === "" || password === "") {
+    res.status(400).send('Invalid input - email/password field cannot be empty!!!');
+  }
 
   if (!user){
     const userId = addNewUser(email, password);
     res.cookie("user_id", userId)
     res.redirect("/urls")
   } else {
-    res.status(400).send('A user with that email address already exists.');
+    res.status(400).send('A user with that email address already exists!!!');
   }
+
+  console.log(users);
 
   // if email address already exists, send back error with 400 status code
 
