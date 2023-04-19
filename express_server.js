@@ -69,16 +69,23 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls")
 });
 
+// handles data sent to the database on the creation of a new url.
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL
   res.redirect("/urls")
 });
 
-
 // Handles redirect to long URL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
+});
+
+// handles login
+app.post("/login", (req,res) => {
+  const username = req.body;
+  res.cookie("username", username);
+  res.redirect("/urls");
 });
 
 
