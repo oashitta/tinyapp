@@ -3,14 +3,18 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+const cookieParser = require('cookie-parser')
+
 // decodes front end view to enable it work with the backend.
 app.use(express.urlencoded({ extended: true }));
 // sets up ejs view engine
 app.set("view engine", "ejs");
 
+// activate cookie parser
+app.use(cookieParser());
 
 
-// obkect containing urls - the database
+// object containing urls - the database
 const urlDatabase = {
   "b2xVn2": 'http://www.lighthouselabs.ca',
   "9sm5xK": 'http://www.google.com'
@@ -27,13 +31,13 @@ function generateRandomString(length) {
   return result;
 }
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
 
 // response when a get request is sent to the homepage
 app.get('/', (reg, res) => {
-  res.send('Hello!');
+  res.send('This is the home Page. It does nothing right now.');
 });
 
 // response for /urls path
@@ -55,6 +59,11 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Handles redirect to long URL
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
+});
 
 // shows the details of the new url created via a post request
 app.post("/urls", (req, res) => {
@@ -73,12 +82,6 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL
   res.redirect("/urls")
-});
-
-// Handles redirect to long URL
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
 });
 
 // handles login
