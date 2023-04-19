@@ -22,6 +22,21 @@ const urlDatabase = {
   "9sm5xK": 'http://www.google.com'
 };
 
+// users object
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+
 // function generating random string.
 const generateRandomString = function(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -44,7 +59,8 @@ app.get('/', (reg, res) => {
 
 // response for /urls path
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  const loggedInUser = users[req.cookies["user_id"]];
+  const templateVars = { urls: urlDatabase, user: loggedInUser && loggedInUser.email};
   // is there a logged in user? retrieve the cookie
   // const currentUser = req.cookies
   res.render("urls_index", templateVars);
@@ -52,7 +68,8 @@ app.get("/urls", (req, res) => {
 
 // response for the /urls/new path to create a new url
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"]};
+  const loggedInUser = users[req.cookies["user_id"]];
+  const templateVars = { user: loggedInUser && loggedInUser.email };
 
   res.render("urls_new", templateVars);
 });
@@ -60,8 +77,8 @@ app.get("/urls/new", (req, res) => {
 // shows details of short url.
 app.get("/urls/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  const username =  req.cookies["username"];
-  const templateVars = { id: req.params.id, longURL, username};
+  const loggedInUser = users[req.cookies["user_id"]];
+  const templateVars = { id: req.params.id, longURL, user: loggedInUser && loggedInUser.email};
   // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
@@ -70,13 +87,14 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   // adding cookie request so it can be rendered in the header.
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
-  res.redirect(longURL, templateVars);
+  // const templateVars = { urls: urlDatabase, user: req.cookies["user_id"]};
+  res.redirect(longURL);
 });
 
 // endpoint for user registration
 app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies["username"]};
+  // const loggedInUser = users[req.cookies["user_id"]];
+  const templateVars = { user: req.cookies["user_id"]};
   res.render("user_registration", templateVars);
 });
 
@@ -101,11 +119,13 @@ app.post("/urls/:id", (req, res) => {
 
 // handles login
 app.post("/login", (req,res) => {
-  const username = req.body.username;
-  console.log(username);
+  const userId = req.cookies["user_id"]
+  const user = req.body.userId;
+  console.log(userId);
+  console.log(user);
 
   // setting the cookie in the user's browswer
-  res.cookie("username", username);
+  res.cookie("user_id", userId);
 
   // redirecting to /urls
   res.redirect("/urls");
@@ -113,9 +133,58 @@ app.post("/login", (req,res) => {
 
 app.post("/logout", (req,res) => {
   // to clear cookie
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   // to redirect to /urls
   res.redirect("/urls");
+});
+
+const addNewUser = (email, password) => {
+  // to create new user ID.
+  const userId = generateRandomString(10);
+
+  // create new user object
+  const newUser = {
+    id: userId,
+    email,
+    password,
+  }
+
+  users[userId] = newUser;
+
+  return userId;
+
+};
+
+const findExistingUser = function(email) {
+  for (let userId in users) {
+    if (users[userId].email === email) {
+      return users[userId];
+    }
+  }
+  return false
+
+};
+
+app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  //  or const {email, password} = req.body;
+
+  // if email field is empty send back response with 400 status code
+  const user = findExistingUser(email);
+
+  if (!user){
+    const userId = addNewUser(email, password);
+    res.cookie("user_id", userId)
+    res.redirect("/urls")
+  } else {
+    res.status(400).send('A user with that email address already exists.');
+  }
+
+  // if email address already exists, send back error with 400 status code
+
+  
 });
 
 
