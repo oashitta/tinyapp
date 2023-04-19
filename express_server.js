@@ -36,7 +36,6 @@ const users = {
   },
 };
 
-
 // function generating random string.
 const generateRandomString = function(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -48,8 +47,18 @@ const generateRandomString = function(length) {
   return result;
 };
 
+// function to find if an email address already exists at registration.
+const findExistingUser = function(email) {
+  for (let userId in users) {
+    if (users[userId].email === email) {
+      return users[userId];
+    }
+  }
+  return false
+};
+
 app.get("/urls.json", (req, res) => {
-  res.json("username");
+  res.json("user_id");
 });
 
 // response when a get request is sent to the homepage
@@ -124,23 +133,31 @@ app.post("/urls/:id", (req, res) => {
 
 // handles login
 app.post("/login", (req,res) => {
-  const userId = req.cookies["user_id"]
-  const user = req.body.userId;
-  console.log(userId);
-  console.log(user);
+  const email = req.body.email;
+  const password = req.body.password;
 
-  // setting the cookie in the user's browswer
-  res.cookie("user_id", userId);
+  // use email and password fields
+  const user = findExistingUser(email);
 
-  // redirecting to /urls
-  res.redirect("/urls");
+  // if email does not exist you want to send an error and exit.
+  if (!user){
+    res.status(403).send('This email address does not exist!!!');
+  } 
+  
+  //if email exists then you want to check the password matches then log in and set cookie
+  if (user && password === user.password) {
+    res.cookie("user_id",  user.id);
+    res.redirect("/urls");
+  } else {
+    res.status(403).send("Invalid email or password.")
+  }
 });
 
 app.post("/logout", (req,res) => {
   // to clear cookie
   res.clearCookie('user_id');
   // to redirect to /urls
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 const addNewUser = (email, password) => {
@@ -153,21 +170,9 @@ const addNewUser = (email, password) => {
     email,
     password,
   }
-
   users[userId] = newUser;
 
   return userId;
-
-};
-
-const findExistingUser = function(email) {
-  for (let userId in users) {
-    if (users[userId].email === email) {
-      return users[userId];
-    }
-  }
-  return false
-
 };
 
 app.post("/register", (req, res) => {
@@ -189,12 +194,8 @@ app.post("/register", (req, res) => {
   } else {
     res.status(400).send('A user with that email address already exists!!!');
   }
-
   console.log(users);
-
   // if email address already exists, send back error with 400 status code
-
-  
 });
 
 
