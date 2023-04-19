@@ -105,6 +105,13 @@ app.post("/login", (req,res) => {
   res.redirect("/urls");
 });
 
+app.post("/logout", (req,res) => {
+  // to clear cookie
+  res.clearCookie('username');
+  // to redirect to /urls
+  res.redirect("/urls");
+});
+
 
 app.listen(PORT, () => {
   console.log(`Mot's TinyURL app is listening on port ${PORT}`)
