@@ -74,6 +74,12 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL, templateVars);
 });
 
+// endpoint for user registration
+app.get("/register", (req, res) => {
+  const templateVars = { username: req.cookies["username"]};
+  res.render("user_registration", templateVars);
+});
+
 // shows the details of the new url created via a post request
 app.post("/urls", (req, res) => {
   const id = generateRandomString(6);
