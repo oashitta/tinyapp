@@ -5,7 +5,7 @@ const app = express();
 
 const PORT = 8080;
 
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 
 // decodes front end view to enable it work with the backend.
 app.use(express.urlencoded({ extended: true }));
@@ -23,18 +23,18 @@ const urlDatabase = {
 };
 
 // function generating random string.
-function generateRandomString(length) {
+const generateRandomString = function(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   const charactersLength = characters.length;
-  for (let i = 0; i < length; i++){
+  for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
-}
+};
 
 app.get("/urls.json", (req, res) => {
-  res.json(username);
+  res.json("username");
 });
 
 // response when a get request is sent to the homepage
@@ -61,7 +61,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   const username =  req.cookies["username"];
-  const templateVars = { id: req.params.id, longURL, username} ;
+  const templateVars = { id: req.params.id, longURL, username};
   // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
@@ -76,21 +76,21 @@ app.get("/u/:id", (req, res) => {
 
 // shows the details of the new url created via a post request
 app.post("/urls", (req, res) => {
-  const id = generateRandomString(6)
-  urlDatabase[id] = req.body.longURL
-  res.redirect(`/urls/${id}`)
+  const id = generateRandomString(6);
+  urlDatabase[id] = req.body.longURL;
+  res.redirect(`/urls/${id}`);
 });
 
 // post route that removes url resources
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id]
-  res.redirect("/urls")
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
 });
 
 // handles data sent to the database on the creation of a new url.
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL
-  res.redirect("/urls")
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect("/urls");
 });
 
 // handles login
@@ -114,6 +114,6 @@ app.post("/logout", (req,res) => {
 
 
 app.listen(PORT, () => {
-  console.log(`Mot's TinyURL app is listening on port ${PORT}`)
+  console.log(`Mot's TinyURL app is listening on port ${PORT}`);
 });
 
