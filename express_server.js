@@ -1,19 +1,28 @@
-// Import express, assign it to a cariable and set variable for the port to listen to
+// Import express, assign it to a variable and set variable for the port to listen to
 const express = require("express");
 // creating an express app
 const app = express();
 // for hashing passwords
 const bcrypt = require("bcryptjs");
-
 const PORT = 8080;
 
+// Middleware
 const cookieParser = require('cookie-parser');
+// Middleware to encrypt cookies
+const cookieSession = require('cookie-session');
 
 // decodes front end view to enable it work with the backend.
 app.use(express.urlencoded({ extended: true }));
 
 // activate cookie parser
 app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['khfd', '2r5y', 'i6kv', 'e9sm', '4k0h'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 // sets up ejs template view engine
 app.set("view engine", "ejs");
@@ -101,7 +110,7 @@ app.get('/', (reg, res) => {
 
 // response for /urls path
 app.get("/urls", (req, res) => {
-  const loggedInUser = users[req.cookies["user_id"]];
+  const loggedInUser = users[req.session.user_id];
 
   if (!loggedInUser) {
     res.status(403).send(`You need to be logged in to view shortened urls. <a href="http://localhost:8080/login">Login Here!</a> `)
@@ -119,7 +128,7 @@ app.get("/urls", (req, res) => {
 
 // response for the /urls/new path to create a new url
 app.get("/urls/new", (req, res) => {
-  const loggedInUser = users[req.cookies["user_id"]];
+  const loggedInUser = users[req.session.user_id];
   const templateVars = { user: loggedInUser && loggedInUser.email };
 
   if (loggedInUser) {
@@ -133,7 +142,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   // const shortURL = urlDatabase[req.params.id];
   const longURL = urlDatabase[req.params.id].longURL;
-  const loggedInUser = users[req.cookies["user_id"]];
+  const loggedInUser = users[req.session.user_id];
   const templateVars = {id: req.params.id, longURL, user: loggedInUser && loggedInUser.email};
 
   if (!loggedInUser) {
@@ -165,29 +174,29 @@ app.get("/register", (req, res) => {
   // const loggedInUser = users[req.cookies["user_id"]];
   
   // if user is logged in, visits to login page shld redirect to /urls
-  const loggedInUser = users[req.cookies["user_id"]];
+  const loggedInUser = users[req.session.user_id];
   if (loggedInUser) {
     res.redirect("/urls")
   } else {
-    const templateVars = { user: req.cookies["user_id"]};
+    const templateVars = { user: req.session.user_id};
     res.render("user_registration", templateVars);
   };
 });
 
 app.get("/login", (req, res) => {
   // if user is logged in, visits to login page shld redirect to /urls
-  const loggedInUser = users[req.cookies["user_id"]];
+  const loggedInUser = users[req.session.user_id];
   if (loggedInUser) {
     res.redirect("/urls")
   } else {
-  const templateVars = { user: req.cookies["user_id"]};
+  const templateVars = { user: req.session.user_id};
   res.render("user_login", templateVars );
   };
 });
 
 // shows the details of the new url created via a post request
 app.post("/urls", (req, res) => {
-  const loggedInUser = users[req.cookies["user_id"]];
+  const loggedInUser = users[req.session.user_id];
   
   if (loggedInUser) {  
     const shortUrl = generateRandomString(6);
@@ -205,7 +214,7 @@ app.post("/urls", (req, res) => {
 
 // to edit the long URL
 app.post("/urls/:id", (req, res) => {
-  const loggedInUser = users[req.cookies["user_id"]];
+  const loggedInUser = users[req.session.user_id];
   const shortURL = req.params.id;
   
   if(!urlDatabase.hasOwnProperty(shortURL)) {
@@ -226,7 +235,7 @@ app.post("/urls/:id", (req, res) => {
 
 // post route that removes url resources
 app.post("/urls/:id/delete", (req, res) => {
-  const loggedInUser = users[req.cookies["user_id"]];
+  const loggedInUser = users[req.session.user_id];
   const shortURL = req.params.id;
   
   // restricting delete permission if not owner
@@ -265,7 +274,8 @@ app.post("/login", (req,res) => {
   //if email exists then you want to check the password matches then log in and set cookie
   // if (user && password === user.password) {
   if (user && bcrypt.compareSync(password, user.password)) {
-    res.cookie("user_id",  user.id);
+    // res.cookie("user_id",  user.id);
+    req.session.user_id = user.id
     res.redirect("/urls");
   } else {
     res.status(403).send("Invalid email or password.")
@@ -309,7 +319,8 @@ app.post("/register", (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const hashPassword = bcrypt.hashSync(password, salt);
     const userId = addNewUser(email, hashPassword);
-    res.cookie("user_id", userId);
+    // res.cookie("user_id", userId);
+    req.session.user_id = userId;
     res.redirect("/urls");
   } else {
     res.status(400).send('A user with that email address already exists!!!');
