@@ -103,13 +103,26 @@ app.get("/u/:id", (req, res) => {
 // endpoint for user registration
 app.get("/register", (req, res) => {
   // const loggedInUser = users[req.cookies["user_id"]];
-  const templateVars = { user: req.cookies["user_id"]};
-  res.render("user_registration", templateVars);
+  
+  // if user is logged in, visits to login page shld redirect to /urls
+  const loggedInUser = users[req.cookies["user_id"]];
+  if (loggedInUser) {
+    res.redirect("/urls")
+  } else {
+    const templateVars = { user: req.cookies["user_id"]};
+    res.render("user_registration", templateVars);
+  };
 });
 
 app.get("/login", (req, res) => {
+  // if user is logged in, visits to login page shld redirect to /urls
+  const loggedInUser = users[req.cookies["user_id"]];
+  if (loggedInUser) {
+    res.redirect("/urls")
+  } else {
   const templateVars = { user: req.cookies["user_id"]};
   res.render("user_login", templateVars );
+  };
 });
 
 // shows the details of the new url created via a post request
