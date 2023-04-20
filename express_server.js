@@ -2,6 +2,8 @@
 const express = require("express");
 // creating an express app
 const app = express();
+// for hashing passwords
+const bcrypt = require("bcryptjs");
 
 const PORT = 8080;
 
@@ -84,8 +86,6 @@ const urlsForUser = function (id) {
       userURLs[shortUrl] = urlDatabase[shortUrl]
     } 
   }
-  console.log("here")
-  console.log(userURLs);
   return userURLs
 };
 
@@ -108,10 +108,10 @@ app.get("/urls", (req, res) => {
   }
 
   const templateVars = { urls: urlsForUser(loggedInUser), user: loggedInUser && loggedInUser.email};
-  console.log(urlDatabase);
-  console.log(loggedInUser);
-  console.log(loggedInUser.id);
 
+  console.log(loggedInUser);
+  console.log(users);
+ 
   // is there a logged in user? retrieve the cookie
   // const currentUser = req.cookies
   res.render("urls_index", templateVars);
@@ -263,7 +263,8 @@ app.post("/login", (req,res) => {
   } 
   
   //if email exists then you want to check the password matches then log in and set cookie
-  if (user && password === user.password) {
+  // if (user && password === user.password) {
+  if (user && bcrypt.compareSync(password, user.password)) {
     res.cookie("user_id",  user.id);
     res.redirect("/urls");
   } else {
@@ -296,7 +297,6 @@ const addNewUser = (email, password) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
   //  or const {email, password} = req.body;
 
   // if email field is empty send back response with 400 status code
@@ -306,14 +306,14 @@ app.post("/register", (req, res) => {
   }
 
   if (!user){
-    const userId = addNewUser(email, password);
-    res.cookie("user_id", userId)
-    res.redirect("/urls")
+    const salt = bcrypt.genSaltSync(10);
+    const hashPassword = bcrypt.hashSync(password, salt);
+    const userId = addNewUser(email, hashPassword);
+    res.cookie("user_id", userId);
+    res.redirect("/urls");
   } else {
     res.status(400).send('A user with that email address already exists!!!');
   }
-  console.log(users);
-  // if email address already exists, send back error with 400 status code
 });
 
 
