@@ -80,7 +80,11 @@ app.get("/urls/new", (req, res) => {
   const loggedInUser = users[req.cookies["user_id"]];
   const templateVars = { user: loggedInUser && loggedInUser.email };
 
-  res.render("urls_new", templateVars);
+  if (loggedInUser) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login")
+  }
 });
 
 // shows details of short url.
@@ -97,6 +101,9 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   // adding cookie request so it can be rendered in the header.
   // const templateVars = { urls: urlDatabase, user: req.cookies["user_id"]};
+  if (!longURL) {
+    res.status(404).send("Page Not Found - The url you have requested does not exist.")
+  }
   res.redirect(longURL);
 });
 
@@ -127,9 +134,17 @@ app.get("/login", (req, res) => {
 
 // shows the details of the new url created via a post request
 app.post("/urls", (req, res) => {
-  const id = generateRandomString(6);
-  urlDatabase[id] = req.body.longURL;
-  res.redirect(`/urls/${id}`);
+  const loggedInUser = users[req.cookies["user_id"]];
+  
+  
+  if (loggedInUser) {  
+    const id = generateRandomString(6);
+    urlDatabase[id] = req.body.longURL;
+    res.redirect(`/urls/${id}`);
+  } else {
+    // res.send(`<h3>You have to be logged in to shorten a url. Please sign into your account.</h3>`)
+    res.status(403).send("You have to be logged in to shorten a new url. Please sign into your account.")
+  }
 });
 
 // post route that removes url resources
