@@ -18,8 +18,25 @@ app.set("view engine", "ejs");
 
 // object containing urls - the database
 const urlDatabase = {
-  "b2xVn2": 'http://www.lighthouselabs.ca',
-  "9sm5xK": 'http://www.google.com'
+  "b2xVn2": {
+    longURL: 'http://www.lighthouselabs.ca',
+    userID: "aJ48lW",
+  },
+
+  "9sm5xK": {
+    longURL:'http://www.google.com',
+    userID: "aJ48lW",
+  },
+
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 // users object
@@ -89,7 +106,7 @@ app.get("/urls/new", (req, res) => {
 
 // shows details of short url.
 app.get("/urls/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   const loggedInUser = users[req.cookies["user_id"]];
   const templateVars = { id: req.params.id, longURL, user: loggedInUser && loggedInUser.email};
   // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
@@ -98,11 +115,11 @@ app.get("/urls/:id", (req, res) => {
 
 // Handles redirect to long URL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   // adding cookie request so it can be rendered in the header.
   // const templateVars = { urls: urlDatabase, user: req.cookies["user_id"]};
   if (!longURL) {
-    res.status(404).send("Page Not Found - The url you have requested does not exist.")
+    res.status(404).send("Page Not Found - The short URL you have requested does not exist.")
   }
   res.redirect(longURL);
 });
