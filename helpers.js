@@ -68,16 +68,16 @@ const generateRandomString = function(length) {
 };
 
 // function to filter database to show urls specific to a particular user
-const urlsForUser = function (id) {
+const urlsForUser = function(id) {
   // returns urls where userID === user_id
   const userURLs = {};
 
   for (const shortUrl in urlDatabase) {
     if (urlDatabase[shortUrl].userID === id) {
-      userURLs[shortUrl] = urlDatabase[shortUrl]
-    } 
+      userURLs[shortUrl] = urlDatabase[shortUrl];
+    }
   }
-  return userURLs
+  return userURLs;
 };
 
 const addNewUser = (email, password) => {
@@ -89,7 +89,7 @@ const addNewUser = (email, password) => {
     id: userId,
     email,
     password,
-  }
+  };
   users[userId] = newUser;
   return userId;
 };
@@ -97,10 +97,6 @@ const addNewUser = (email, password) => {
 const authenticateLogin = (users, email, password) => {
   for (let user in users) {
     const userEmailFound = findExistingUser(email, users);
-    // if (
-    //   users[user].email === email &&
-    //   bcrypt.compareSync(password, users[user].password)
-    // ) {
     if (userEmailFound && bcrypt.compareSync(password, users[user].password)) {
       return users[user];
     }
@@ -117,4 +113,4 @@ module.exports = {
   users,
   authenticateLogin,
   addNewUser,
-}
+};

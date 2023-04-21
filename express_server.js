@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ['khfd', '2r5y', 'i6kv', 'e9sm', '4k0h'],
-}))
+}));
 
 // sets up ejs template view engine
 app.set("view engine", "ejs");
@@ -40,13 +40,10 @@ app.get("/urls", (req, res) => {
   const loggedInUser = users[req.session.user_id];
 
   if (!loggedInUser) {
-    res.status(403).send(`You need to be logged in to view shortened urls. <a href="http://localhost:8080/login">Login Here!</a> `)
+    res.status(403).send(`You need to be logged in to view shortened urls. <a href="http://localhost:8080/login">Login Here!</a> `);
   }
 
   const templateVars = { urls: urlsForUser(loggedInUser), user: loggedInUser && loggedInUser.email};
-
-  console.log(loggedInUser);
-  console.log(users);
  
   // is there a logged in user? retrieve the cookie
   res.render("urls_index", templateVars);
@@ -60,16 +57,16 @@ app.get("/urls/new", (req, res) => {
   if (loggedInUser) {
     res.render("urls_new", templateVars);
   } else {
-    res.redirect("/login")
+    res.redirect("/login");
   }
 });
 
 // route to display details of short url.
 app.get("/urls/:id", (req, res) => {
-  const shortURL = urlDatabase[req.params.id];  
+  const shortURL = urlDatabase[req.params.id];
 
   if (!shortURL) {
-    res.status(404).send("Page Not Found - The Short URL you have requested does not exist.")
+    res.status(404).send("Page Not Found - The Short URL you have requested does not exist.");
   }
 
   const longURL = urlDatabase[req.params.id].longURL;
@@ -77,7 +74,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {id: req.params.id, longURL, user: loggedInUser && loggedInUser.email};
 
   if (!loggedInUser) {
-    res.status(403).send(`You have to be logged in to view this page. <a href="http://localhost:8080/login">Login Here!</a>`)
+    res.status(403).send(`You have to be logged in to view this page. <a href="http://localhost:8080/login">Login Here!</a>`);
   }
   // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
@@ -85,11 +82,16 @@ app.get("/urls/:id", (req, res) => {
 
 // Handles redirect to long URL
 app.get("/u/:id", (req, res) => {
+  
+  const shortURL = urlDatabase[req.params.id]
+  if (!shortURL) {
+      res.status(404).send("Page Not Found - The short URL you have requested does not exist.");
+      return;
+    }
   const longURL = urlDatabase[req.params.id].longURL;
-  // adding cookie request so it can be rendered in the header.
-  // const templateVars = { urls: urlDatabase, user: req.cookies["user_id"]};
   if (!longURL) {
-    res.status(404).send("Page Not Found - The short URL you have requested does not exist.")
+    res.status(404).send("Page Not Found - The short URL you have requested does not exist.");
+    return;
   }
   res.redirect(longURL);
 });
@@ -101,39 +103,39 @@ app.get("/register", (req, res) => {
   // if user is logged in, visits to login page shld redirect to /urls
   const loggedInUser = users[req.session.user_id];
   if (loggedInUser) {
-    res.redirect("/urls")
+    res.redirect("/urls");
   } else {
     const templateVars = { user: req.session.user_id};
     res.render("user_registration", templateVars);
-  };
+  }
 });
 
 app.get("/login", (req, res) => {
   // if user is logged in, visits to login page shld redirect to /urls
   const loggedInUser = users[req.session.user_id];
   if (loggedInUser) {
-    res.redirect("/urls")
+    res.redirect("/urls");
   } else {
-  const templateVars = { user: req.session.user_id};
-  res.render("user_login", templateVars );
-  };
+    const templateVars = { user: req.session.user_id};
+    res.render("user_login", templateVars);
+  }
 });
 
 // shows the details of the new url created via a post request
 app.post("/urls", (req, res) => {
   const loggedInUser = users[req.session.user_id];
   
-  if (loggedInUser) {  
+  if (loggedInUser) {
     const shortUrl = generateRandomString(6);
     const urlObject = {
       longURL: req.body.longURL,
       userID: loggedInUser,
-    }
+    };
     urlDatabase[shortUrl] = urlObject;
     res.redirect(`/urls/${shortUrl}`);
   } else {
     // res.send(`<h3>You have to be logged in to shorten a url. Please sign into your account.</h3>`)
-    res.status(403).send("You have to be logged in to shorten a new url. Please sign into your account.")
+    res.status(403).send(`You have to be logged in to shorten a new url. Please log into your account. <a href="http://localhost:8080/login">Login Here!</a>`);
   }
 });
 
@@ -142,16 +144,16 @@ app.post("/urls/:id", (req, res) => {
   const loggedInUser = users[req.session.user_id];
   const shortURL = req.params.id;
   
-  if(!urlDatabase.hasOwnProperty(shortURL)) {
-    res.status(403).send("The url you are trying to edit does not exist.")
+  if (!urlDatabase.hasOwnProperty(shortURL)) {
+    res.status(403).send("The url you are trying to edit does not exist.");
   }
 
   if (!loggedInUser) {
-    return res.status(403).send("You need to login to edit this url.")
-  } 
+    return res.status(403).send("You need to login to edit this url.");
+  }
 
-  if (loggedInUser && urlDatabase[shortURL].userID !== loggedInUser ) {
-    return res.status(403).send("You do not have permissions to edit this URL.")
+  if (loggedInUser && urlDatabase[shortURL].userID !== loggedInUser) {
+    return res.status(403).send("You do not have permissions to edit this URL.");
   }
 
   urlDatabase[shortURL].longURL = req.body.longURL;
@@ -165,18 +167,18 @@ app.post("/urls/:id/delete", (req, res) => {
   
   // restricting delete permission if not owner
   // if short url does not exit then error message
-  if(!urlDatabase.hasOwnProperty(shortURL)) {
-    res.status(403).send("The url you are trying to delete does not exist.")
+  if (!urlDatabase.hasOwnProperty(shortURL)) {
+    res.status(403).send("The url you are trying to delete does not exist.");
   }
 
   // if not logged in user then error msg.
   if (!loggedInUser) {
-    return res.status(403).send("You need to login to perform this action.")
-  } 
+    return res.status(403).send("You need to login to perform this action.");
+  }
   
   // logged in but do not own the url.
-  if (loggedInUser && urlDatabase[shortURL].userID !== loggedInUser ) {
-      return res.status(403).send("You do not have permissions to delete this URL.")
+  if (loggedInUser && urlDatabase[shortURL].userID !== loggedInUser) {
+    return res.status(403).send("You do not have permissions to delete this URL.");
   }
 
   // delete database
@@ -191,32 +193,25 @@ app.post("/login", (req,res) => {
 
   // if email field is empty send back response with 400 status code
   if (email === "" || password === "") {
-    res.status(400).send('Invalid input - email/password field cannot be empty!!!');
+    res.status(400).send(`Invalid input - email/password field cannot be empty!!! <a href="http://localhost:8080/login">Try Again!</a>`);
     return;
   }
   
   // use email and password fields
+  //if email exists then you want to check the password matches then log in and set cookie. authenticate login function handles this.
   const user = authenticateLogin(users, email, password);
 
   // if email does not exist you want to send an error and exit.
-  if (!user){
+  if (!user) {
     res.status(403).send('This email/password combination does not exist!!! <a href="http://localhost:8080/login">Try Again!</a>');
-    return
-  } 
-  
-  //if email exists then you want to check the password matches then log in and set cookie
-  // if (user && bcrypt.compareSync(password, user.password)) {
-  //   // res.cookie("user_id",  user.id);
-   
-  // } else {
-  //   res.status(403).send("Invalid email or password.")
-  // }
-  req.session.user_id = user.id
+    return;
+  }
+  req.session.user_id = user.id;
   res.redirect("/urls");
 });
 
 app.post("/logout", (req,res) => {
-  // to clear cookie
+  // to clear cookies
   req.session = null;
   // to redirect to /urls
   res.redirect("/login");
@@ -235,18 +230,17 @@ app.post("/register", (req, res) => {
   }
   
   const user = findExistingUser(email, users);
-  console.log("user value is", user)
   if (user) {
     res.status(400).send(`A user with that email address already exists!!! <a href="http://localhost:8080/register">Try Again!</a>`);
     return;
   }
 
-    const salt = bcrypt.genSaltSync(10);
-    const hashPassword = bcrypt.hashSync(password, salt);
-    const userId = addNewUser(email, hashPassword);
-    // res.cookie("user_id", userId);
-    req.session.user_id = userId;
-    res.redirect("/urls");
+  const salt = bcrypt.genSaltSync(10);
+  const hashPassword = bcrypt.hashSync(password, salt);
+  const userId = addNewUser(email, hashPassword);
+  // res.cookie("user_id", userId);
+  req.session.user_id = userId;
+  res.redirect("/urls");
 
 });
 
