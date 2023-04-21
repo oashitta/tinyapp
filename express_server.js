@@ -6,6 +6,8 @@ const app = express();
 const bcrypt = require("bcryptjs");
 const PORT = 8080;
 
+const {findExistingUser} = require('./helpers.js');
+
 // Middleware
 const cookieParser = require('cookie-parser');
 // Middleware to encrypt cookies
@@ -75,15 +77,6 @@ const generateRandomString = function(length) {
   return result;
 };
 
-// function to find if an email address already exists at registration.
-const findExistingUser = function(email) {
-  for (let userId in users) {
-    if (users[userId].email === email) {
-      return users[userId];
-    }
-  }
-  return false
-};
 
 // function to filter database to show urls specific to a particular user
 const urlsForUser = function (id) {
@@ -264,7 +257,7 @@ app.post("/login", (req,res) => {
   const password = req.body.password;
 
   // use email and password fields
-  const user = findExistingUser(email);
+  const user = findExistingUser(email, users);
 
   // if email does not exist you want to send an error and exit.
   if (!user){
@@ -310,7 +303,7 @@ app.post("/register", (req, res) => {
   //  or const {email, password} = req.body;
 
   // if email field is empty send back response with 400 status code
-  const user = findExistingUser(email);
+  const user = findExistingUser(email, users);
   if (email === "" || password === "") {
     res.status(400).send('Invalid input - email/password field cannot be empty!!!');
   }
