@@ -6,7 +6,7 @@ const app = express();
 const bcrypt = require("bcryptjs");
 const PORT = 8080;
 
-const {findExistingUser} = require('./helpers.js');
+const {findExistingUser, generateRandomString, urlsForUser, urlDatabase, users  } = require('./helpers.js');
 
 // Middleware
 const cookieParser = require('cookie-parser');
@@ -21,76 +21,10 @@ app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ['khfd', '2r5y', 'i6kv', 'e9sm', '4k0h'],
-
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 
 // sets up ejs template view engine
 app.set("view engine", "ejs");
-
-// object containing urls - the database
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: 'http://www.lighthouselabs.ca',
-    userID: "aJ48lW",
-  },
-
-  "9sm5xK": {
-    longURL: 'http://www.google.com',
-    userID: "aJ48lW",
-  },
-
-  "b6UTxQ": {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
-  },
-  
-  "i3BoGr": {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
-
-// users object
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
-
-// function generating random string.
-const generateRandomString = function(length) {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-};
-
-
-// function to filter database to show urls specific to a particular user
-const urlsForUser = function (id) {
-  // returns urls where userID === user_id
-  const userURLs = {};
-
-  for (const shortUrl in urlDatabase) {
-    if (urlDatabase[shortUrl].userID === id) {
-      userURLs[shortUrl] = urlDatabase[shortUrl]
-    } 
-  }
-  return userURLs
-};
-
 
 app.get("/urls.json", (req, res) => {
   res.json("user_id");
@@ -115,7 +49,6 @@ app.get("/urls", (req, res) => {
   console.log(users);
  
   // is there a logged in user? retrieve the cookie
-  // const currentUser = req.cookies
   res.render("urls_index", templateVars);
 });
 
@@ -141,12 +74,10 @@ app.get("/urls/:id", (req, res) => {
   if (!loggedInUser) {
     res.status(403).send(`You have to be logged in to view this page. <a href="http://localhost:8080/login">Login Here!</a>`)
   }
-  // adding cookie request so it can be rendered in the header.
-  // const templateVars = { urls: urlDatabase, user: req.cookies["user_id"]};
 
   // this is not working
   if (!longURL) {
-    res.status(404).send("Page Not Found - The short Short URL you have requested does not exist.")
+    res.status(404).send("Page Not Found - The Short URL you have requested does not exist.")
   }
   // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
@@ -162,6 +93,7 @@ app.get("/u/:id", (req, res) => {
   }
   res.redirect(longURL);
 });
+
 // endpoint for user registration
 app.get("/register", (req, res) => {
   // const loggedInUser = users[req.cookies["user_id"]];
@@ -236,6 +168,7 @@ app.post("/urls/:id/delete", (req, res) => {
   if(!urlDatabase.hasOwnProperty(shortURL)) {
     res.status(403).send("The url you are trying to delete does not exist.")
   }
+
   // if not logged in user then error msg.
   if (!loggedInUser) {
     return res.status(403).send("You need to login to perform this action.")
@@ -261,11 +194,10 @@ app.post("/login", (req,res) => {
 
   // if email does not exist you want to send an error and exit.
   if (!user){
-    res.status(403).send('This email does not exist!!!');
+    res.status(403).send('This email/password combination does not exist!!!');
   } 
   
   //if email exists then you want to check the password matches then log in and set cookie
-  // if (user && password === user.password) {
   if (user && bcrypt.compareSync(password, user.password)) {
     // res.cookie("user_id",  user.id);
     req.session.user_id = user.id
@@ -320,8 +252,8 @@ app.post("/register", (req, res) => {
   }
 });
 
-
 app.listen(PORT, () => {
   console.log(`Mot's TinyURL app is listening on port ${PORT}`);
 });
+
 
