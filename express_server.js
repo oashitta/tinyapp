@@ -64,20 +64,20 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-// shows details of short url.
+// route to display details of short url.
 app.get("/urls/:id", (req, res) => {
-  // const shortURL = urlDatabase[req.params.id];
+  const shortURL = urlDatabase[req.params.id];  
+
+  if (!shortURL) {
+    res.status(404).send("Page Not Found - The Short URL you have requested does not exist.")
+  }
+
   const longURL = urlDatabase[req.params.id].longURL;
   const loggedInUser = users[req.session.user_id];
   const templateVars = {id: req.params.id, longURL, user: loggedInUser && loggedInUser.email};
 
   if (!loggedInUser) {
     res.status(403).send(`You have to be logged in to view this page. <a href="http://localhost:8080/login">Login Here!</a>`)
-  }
-
-  // this is not working
-  if (!longURL) {
-    res.status(404).send("Page Not Found - The Short URL you have requested does not exist.")
   }
   // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
@@ -248,7 +248,7 @@ app.post("/register", (req, res) => {
     req.session.user_id = userId;
     res.redirect("/urls");
   } else {
-    res.status(400).send('A user with that email address already exists!!!');
+    res.status(400).send(`A user with that email address already exists!!! <a href="http://localhost:8080/register">Try Again!</a>`);
   }
 });
 

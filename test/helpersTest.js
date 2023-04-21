@@ -21,4 +21,4 @@ describe('findExistingUser', function() {
     const expectedUser = "userRandomID";
     assert.deepEqual(user, expectedUser)
   });
-});
+});git
