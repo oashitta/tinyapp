@@ -6,7 +6,7 @@ const app = express();
 const bcrypt = require("bcryptjs");
 const PORT = 8080;
 
-const {findExistingUser, generateRandomString, urlsForUser, urlDatabase, users  } = require('./helpers.js');
+const {findExistingUser, generateRandomString, urlsForUser, urlDatabase, users, authenticateLogin, addNewUser  } = require('./helpers.js');
 
 // Middleware
 const cookieParser = require('cookie-parser');
@@ -189,22 +189,30 @@ app.post("/login", (req,res) => {
   const email = req.body.email;
   const password = req.body.password;
 
+  // if email field is empty send back response with 400 status code
+  if (email === "" || password === "") {
+    res.status(400).send('Invalid input - email/password field cannot be empty!!!');
+    return;
+  }
+  
   // use email and password fields
-  const user = findExistingUser(email, users);
+  const user = authenticateLogin(users, email, password);
 
   // if email does not exist you want to send an error and exit.
   if (!user){
-    res.status(403).send('This email/password combination does not exist!!!');
+    res.status(403).send('This email/password combination does not exist!!! <a href="http://localhost:8080/login">Try Again!</a>');
+    return
   } 
   
   //if email exists then you want to check the password matches then log in and set cookie
-  if (user && bcrypt.compareSync(password, user.password)) {
-    // res.cookie("user_id",  user.id);
-    req.session.user_id = user.id
-    res.redirect("/urls");
-  } else {
-    res.status(403).send("Invalid email or password.")
-  }
+  // if (user && bcrypt.compareSync(password, user.password)) {
+  //   // res.cookie("user_id",  user.id);
+   
+  // } else {
+  //   res.status(403).send("Invalid email or password.")
+  // }
+  req.session.user_id = user.id
+  res.redirect("/urls");
 });
 
 app.post("/logout", (req,res) => {
@@ -214,20 +222,6 @@ app.post("/logout", (req,res) => {
   res.redirect("/login");
 });
 
-const addNewUser = (email, password) => {
-  // to create new user ID.
-  const userId = generateRandomString(10);
-
-  // create new user object
-  const newUser = {
-    id: userId,
-    email,
-    password,
-  }
-  users[userId] = newUser;
-
-  return userId;
-};
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
@@ -235,21 +229,25 @@ app.post("/register", (req, res) => {
   //  or const {email, password} = req.body;
 
   // if email field is empty send back response with 400 status code
-  const user = findExistingUser(email, users);
   if (email === "" || password === "") {
     res.status(400).send('Invalid input - email/password field cannot be empty!!!');
+    return;
+  }
+  
+  const user = findExistingUser(email, users);
+  console.log("user value is", user)
+  if (user) {
+    res.status(400).send(`A user with that email address already exists!!! <a href="http://localhost:8080/register">Try Again!</a>`);
+    return;
   }
 
-  if (!user){
     const salt = bcrypt.genSaltSync(10);
     const hashPassword = bcrypt.hashSync(password, salt);
     const userId = addNewUser(email, hashPassword);
     // res.cookie("user_id", userId);
     req.session.user_id = userId;
     res.redirect("/urls");
-  } else {
-    res.status(400).send(`A user with that email address already exists!!! <a href="http://localhost:8080/register">Try Again!</a>`);
-  }
+
 });
 
 app.listen(PORT, () => {
