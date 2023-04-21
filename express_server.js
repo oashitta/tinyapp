@@ -76,7 +76,6 @@ app.get("/urls/:id", (req, res) => {
   if (!loggedInUser) {
     res.status(403).send(`You have to be logged in to view this page. <a href="http://localhost:8080/login">Login Here!</a>`);
   }
-  // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
 
@@ -98,8 +97,7 @@ app.get("/u/:id", (req, res) => {
 
 // endpoint for user registration
 app.get("/register", (req, res) => {
-  // const loggedInUser = users[req.cookies["user_id"]];
-  
+
   // if user is logged in, visits to login page shld redirect to /urls
   const loggedInUser = users[req.session.user_id];
   if (loggedInUser) {
@@ -134,7 +132,7 @@ app.post("/urls", (req, res) => {
     urlDatabase[shortUrl] = urlObject;
     res.redirect(`/urls/${shortUrl}`);
   } else {
-    // res.send(`<h3>You have to be logged in to shorten a url. Please sign into your account.</h3>`)
+   
     res.status(403).send(`You have to be logged in to shorten a new url. Please log into your account. <a href="http://localhost:8080/login">Login Here!</a>`);
   }
 });
@@ -238,7 +236,6 @@ app.post("/register", (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   const hashPassword = bcrypt.hashSync(password, salt);
   const userId = addNewUser(email, hashPassword);
-  // res.cookie("user_id", userId);
   req.session.user_id = userId;
   res.redirect("/urls");
 
